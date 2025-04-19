@@ -358,7 +358,6 @@ status_t BufferQueueConsumer::detachBuffer(int slot) {
     mCore->mDequeueCondition.notify_all();
 #endif
     VALIDATE_CONSISTENCY();
-
     return NO_ERROR;
 }
 
