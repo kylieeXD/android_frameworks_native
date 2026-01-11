@@ -42,6 +42,8 @@
 
 #include <system/window.h>
 
+#include <com_android_graphics_libgui_flags.h>
+
 #include <inttypes.h>
 #include <pwd.h>
 #include <sys/types.h>

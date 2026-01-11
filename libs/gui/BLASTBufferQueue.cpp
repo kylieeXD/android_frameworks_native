@@ -1228,49 +1228,6 @@ public:
         return BufferQueueProducer::query(what, value);
     }
 
-#if COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(BUFFER_RELEASE_CHANNEL)
-    status_t waitForBufferRelease(std::unique_lock<std::mutex>& bufferQueueLock,
-                                  nsecs_t timeout) const override {
-        ATRACE_CALL();
-        const auto startTime = std::chrono::steady_clock::now();
-
-        // BufferQueue has already checked if we have a free buffer. If there's an unread interrupt,
-        // we want to ignore it. This must be done before unlocking the BufferQueue lock to ensure
-        // we don't miss an interrupt.
-        mBufferReleaseReader->clearInterrupts();
-        UnlockGuard unlockGuard{bufferQueueLock};
-
-        ReleaseCallbackId id;
-        sp<Fence> fence;
-        uint32_t maxAcquiredBufferCount;
-        status_t status =
-                mBufferReleaseReader->readBlocking(id, fence, maxAcquiredBufferCount, timeout);
-        if (status == TIMED_OUT) {
-            return TIMED_OUT;
-        } else if (status != OK) {
-            // Waiting was interrupted or an error occurred. BufferQueueProducer will check if we
-            // have a free buffer and call this method again if not.
-            return OK;
-        }
-
-        sp<BLASTBufferQueue> bbq = mBLASTBufferQueue.promote();
-        if (!bbq) {
-            return OK;
-        }
-
-        bbq->releaseBufferCallback(id, fence, maxAcquiredBufferCount);
-        const nsecs_t durationNanos = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                              std::chrono::steady_clock::now() - startTime)
-                                              .count();
-        // Provide a callback for Choreographer to start buffer stuffing recovery when blocked
-        // on buffer release.
-        std::function<void(const nsecs_t)> callbackCopy = bbq->getWaitForBufferReleaseCallback();
-        if (callbackCopy) callbackCopy(durationNanos);
-
-        return OK;
-    }
-#endif
-
 private:
     const wp<BLASTBufferQueue> mBLASTBufferQueue;
     std::shared_ptr<BufferReleaseReader> mBufferReleaseReader;
