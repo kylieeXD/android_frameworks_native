@@ -1119,16 +1119,6 @@ public:
                 [listener = mListener, slots = slots]() { listener->onBuffersDiscarded(slots); });
     }
 
-    void onBufferDetached(int slot) override {
-        AsyncWorker::getInstance().post(
-                [listener = mListener, slot = slot]() { listener->onBufferDetached(slot); });
-    }
-
-#if COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(BQ_CONSUMER_ATTACH_CALLBACK)
-    void onBufferAttached() override {
-        AsyncWorker::getInstance().post([listener = mListener]() { listener->onBufferAttached(); });
-    }
-#endif
 };
 
 #if COM_ANDROID_GRAPHICS_LIBGUI_FLAGS(BUFFER_RELEASE_CHANNEL)
